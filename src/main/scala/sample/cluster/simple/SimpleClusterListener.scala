@@ -50,6 +50,10 @@ class SimpleClusterListener extends Actor with ActorLogging {
     case _: MemberEvent => // ignore
 
 
+    case delete(data:String)=>
+      log.info("deleting{}",data)
+      hash.remove(data)
+      
     case h:util.HashMap[_,_]=>
       log.info("receiving {}",h)
       //updating hash
@@ -70,10 +74,20 @@ class SimpleClusterListener extends Actor with ActorLogging {
         log.info("\n\n\nsending hash to"+m.address)
       }
     }
+    case req@HttpRequest(HttpMethods.DELETE, Uri.Path("/ping"), headers, entity, protocol) =>{
+      val data=req.entity.asString(HttpCharsets.`UTF-8`)
+      log.info("Receiving DELETE request query param: {} ", data)
+      hash.remove(data)
+      sender ! HttpResponse(entity = hash.toString)
+      for (m<-cluster.state.members.filter(_.status == Up)){
+        context.actorSelection(m.address+"/user/clusterListener") ! delete(data)
+      }
+    }
     case req@HttpRequest(HttpMethods.GET, Uri.Path("/ping"), headers, entity, protocol) =>
       val somekey=req.uri.query.get("key")
       val key=somekey match {
-        case None=>""
+        case None=>" "
+        case null=>" "
         case Some(name)=>name
       }
       log.info("receiving get {}",key)
