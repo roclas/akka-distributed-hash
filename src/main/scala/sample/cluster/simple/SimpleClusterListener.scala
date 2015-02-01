@@ -8,7 +8,7 @@ import akka.actor.ActorLogging
 import akka.actor.Actor
 import akka.cluster.MemberStatus.Up
 import spray.can.Http
-import spray.http.{HttpResponse, Uri, HttpMethods, HttpRequest}
+import spray.http._
 import scala.collection.JavaConversions._
 
 
@@ -26,6 +26,13 @@ class SimpleClusterListener extends Actor with ActorLogging {
   
   val hash=new util.HashMap[String,String]()
   hash.put("hola","hola")
+
+  def getParamsMap(s: String) = {
+    s.split('&') map { str=>
+      val pair = str.split('=')
+      (pair(0) -> pair(1))
+    } toMap
+  }
 
   def receive = {
     case s:String=>
@@ -50,16 +57,27 @@ class SimpleClusterListener extends Actor with ActorLogging {
         log.info("updating {} {}",k,v)
         hash.put(k.asInstanceOf[String],v.asInstanceOf[String])
       }
-    case HttpRequest(HttpMethods.PUT, Uri.Path("/ping"), _, _, _) =>
-      log.info("receiving put")
-      hash.put("lalala","lalala")
+    case req@HttpRequest(HttpMethods.PUT, Uri.Path("/ping"), headers, entity, protocol) =>{
+      val data=req.entity.asString(HttpCharsets.`UTF-8`)
+      val hashdata=getParamsMap(data)
+      for((k,v)<-hashdata){
+        log.info("Receiving PUT request query param: {} {}", k,v)
+        hash.put(k,v)
+      }
       sender ! HttpResponse(entity = hash.toString)
       for (m<-cluster.state.members.filter(_.status == Up)){
         context.actorSelection(m.address+"/user/clusterListener") ! hash
         log.info("\n\n\nsending hash to"+m.address)
       }
-    case HttpRequest(HttpMethods.GET, Uri.Path("/ping"), _, _, _) =>
-      sender ! HttpResponse(entity = hash.toString)
+    }
+    case req@HttpRequest(HttpMethods.GET, Uri.Path("/ping"), headers, entity, protocol) =>
+      val somekey=req.uri.query.get("key")
+      val key=somekey match {
+        case None=>""
+        case Some(name)=>name
+      }
+      log.info("receiving get {}",key)
+      sender ! HttpResponse(entity = hash.get(key.toString))
     case r:HttpRequest =>
       sender ! HttpResponse(entity = "this page doesn't exist")
     case c:akka.io.Tcp.Connected =>
