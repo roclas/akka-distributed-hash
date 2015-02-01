@@ -21,6 +21,9 @@ How it works:
 
 AND YOU ARE DONE!!
 
+*** http delete (Eg: " curl -X DELETE http://localhost:8551/ping --data 'hola' ") are supported
+
+
 //TODO: the second node has to sincronize on initialization
-//TODO: post and delete requests are not beeing considered yet
+//TODO: syncronize maps every second ???
 //TODO: ...

@@ -2,14 +2,12 @@ package sample.cluster.simple
 
 import java.util
 
+import akka.actor.{Actor, ActorLogging}
 import akka.cluster.Cluster
 import akka.cluster.ClusterEvent._
-import akka.actor.ActorLogging
-import akka.actor.Actor
 import akka.cluster.MemberStatus.Up
 import spray.can.Http
 import spray.http._
-import scala.collection.JavaConversions._
 
 
 class SimpleClusterListener extends Actor with ActorLogging {
@@ -54,25 +52,22 @@ class SimpleClusterListener extends Actor with ActorLogging {
       log.info("deleting{}",data)
       hash.remove(data)
       
-    case h:util.HashMap[_,_]=>
-      log.info("receiving {}",h)
-      //updating hash
-      for((k,v)<-h){
-        log.info("updating {} {}",k,v)
-        hash.put(k.asInstanceOf[String],v.asInstanceOf[String])
-      }
+    case put(k:String,v:String)=>
+      log.info("putting {} {}",k,v)
+      hash.put(k,v)
+      
     case req@HttpRequest(HttpMethods.PUT, Uri.Path("/ping"), headers, entity, protocol) =>{
       val data=req.entity.asString(HttpCharsets.`UTF-8`)
       val hashdata=getParamsMap(data)
       for((k,v)<-hashdata){
         log.info("Receiving PUT request query param: {} {}", k,v)
         hash.put(k,v)
+        for (m<-cluster.state.members.filter(_.status == Up)){
+          context.actorSelection(m.address+"/user/clusterListener") ! put(k,v)
+          log.info("\n\n\nsending hash to"+m.address)
+        }
       }
       sender ! HttpResponse(entity = hash.toString)
-      for (m<-cluster.state.members.filter(_.status == Up)){
-        context.actorSelection(m.address+"/user/clusterListener") ! hash
-        log.info("\n\n\nsending hash to"+m.address)
-      }
     }
     case req@HttpRequest(HttpMethods.DELETE, Uri.Path("/ping"), headers, entity, protocol) =>{
       val data=req.entity.asString(HttpCharsets.`UTF-8`)
