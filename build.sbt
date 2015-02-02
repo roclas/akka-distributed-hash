@@ -9,4 +9,5 @@ resolvers += "spray repo" at "http://repo.spray.io"// release builds
 libraryDependencies ++= Seq( 
   "com.typesafe.akka" %% "akka-cluster" % "2.3.3"
   ,"io.spray" %%  "spray-can" % "1.3.1"
+  ,"org.codehaus.jackson" % "jackson-mapper-asl" % "1.8.5"
 )

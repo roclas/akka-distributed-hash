@@ -1,21 +1,21 @@
 package sample.cluster.simple
 
 
-import java.io.{ObjectOutputStream, ByteArrayOutputStream}
+import java.security.MessageDigest
+import java.util
 
 import akka.actor.{Actor, ActorLogging}
 import akka.cluster.Cluster
 import akka.cluster.ClusterEvent._
 import akka.cluster.MemberStatus.Up
-import java.util
-import java.security.MessageDigest
-import scala.collection.JavaConversions._
 import spray.can.Http
 import spray.http._
 
+import scala.collection.JavaConversions._
+
 
 class SimpleClusterListener extends Actor with ActorLogging {
- 
+
   val cluster = Cluster(context.system)
  
   // subscribe to cluster changes, re-subscribe when restart 
@@ -27,7 +27,6 @@ class SimpleClusterListener extends Actor with ActorLogging {
   override def postStop(): Unit = cluster.unsubscribe(self)
   
   val hash=new util.HashMap[String,String]()
-  val md5s=List()
 
   def getParamsMap(s: String) = {
     s.split('&') map { str=>
@@ -37,13 +36,14 @@ class SimpleClusterListener extends Actor with ActorLogging {
   }
 
   def md5(m: java.util.HashMap[_,_]) = {
-    val baos = new ByteArrayOutputStream()
-    val oos = new ObjectOutputStream(baos)
-    oos.writeObject(m)
-    oos.close()
-    val md = MessageDigest.getInstance("MD5")
-    md.update(baos.toByteArray());
-    md.digest()
+    val mapper=new org.codehaus.jackson.map.ObjectMapper()
+    val bytesOfMessage = mapper.writeValueAsBytes(m)
+    val thedigest = MessageDigest.getInstance("MD5").digest(bytesOfMessage)
+    val sb = new StringBuffer()
+    for(d<-thedigest){
+      sb.append(Integer.toString((d & 0xff) + 0x100, 16).substring(1))
+    }
+    sb.toString
   }
 
   def receive = {
@@ -62,11 +62,17 @@ class SimpleClusterListener extends Actor with ActorLogging {
       for((k,v)<-map){ hash.put(k,v) }
       //for((k,v)<-hash){ if(map.get(k)==null)hash.remove(k) }
     case delete(data:String)=>
-      log.info("deleting{}",data)
       hash.remove(data)
+      sender ! md5digest(md5(hash))
     case put(k:String,v:String)=>
-      log.info("putting {} {}",k,v)
       hash.put(k,v)
+      sender ! md5digest(md5(hash))
+    case md5digest(s)=>
+      if (!md5(hash).equals(s)){
+        log.info("comparing {} and {}; they are NOT equal",md5(hash),s)
+        sender ! syncronize(hash)
+      }
+
       
     case req@HttpRequest(HttpMethods.PUT, _, _, _, _) =>{
       val data=req.entity.asString(HttpCharsets.`UTF-8`)

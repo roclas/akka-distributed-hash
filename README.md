@@ -30,9 +30,11 @@ How it works:
 AND YOU ARE DONE!!
 
 *** http deletes (Eg: " curl -X DELETE http://localhost:8551 --data 'hello' ") are supported
+
 *** try now to delete something from one of the nodes and check that it's been deleted in the other nodes
 
 
 //TODO: the second node has to sincronize on initialization
+
 //TODO: syncronize maps every second ???
 //TODO: ...
