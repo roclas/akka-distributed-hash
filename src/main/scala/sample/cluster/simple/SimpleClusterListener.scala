@@ -57,6 +57,10 @@ class SimpleClusterListener extends Actor with ActorLogging {
       log.info("Member is Removed: {} after {}", member.address, previousStatus)
       log.info("Current members:{}",cluster.state.members.filter(_.status == Up))
     case _: MemberEvent => // ignore
+    case syncronizeOverriding(map)=>
+      log.info("Syncronizing {} and {}",md5(hash),md5(map))
+      for((k,v)<-map){ hash.put(k,v) }
+      for((k,v)<-hash){ if(map.get(k)==null)hash.remove(k) }
     case syncronize(map)=>
       log.info("Syncronizing {} and {}",md5(hash),md5(map))
       for((k,v)<-map){ hash.put(k,v) }
@@ -70,7 +74,7 @@ class SimpleClusterListener extends Actor with ActorLogging {
     case md5digest(s)=>
       if (!md5(hash).equals(s)){
         log.info("comparing {} and {}; they are NOT equal",md5(hash),s)
-        sender ! syncronize(hash)
+        sender ! syncronizeOverriding(hash)
       }
 
       
