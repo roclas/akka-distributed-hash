@@ -91,10 +91,12 @@ class SimpleClusterListener extends Actor with ActorLogging {
     }
     case req@HttpRequest(HttpMethods.GET, _, _, _, _) =>
       var response=""
-      if(req.uri.path!=null)if(req.uri.path.toString.length>0){
-        val k= req.uri.path.toString.replace("/", "")
-        if(hash.get(k)!=null)response=hash.get(k)
-      }
+      if(req.uri.path!=null){
+        if(req.uri.path.toString.length>1){
+          val k= req.uri.path.toString.replace("/", "")
+          if(hash.get(k)!=null)response=hash.get(k)
+        }else response=hash.toString
+      }else response=hash.toString
       log.info("sending response {} ",response)
       sender ! HttpResponse(entity = response)
     case r:HttpRequest =>
