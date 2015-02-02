@@ -17,9 +17,13 @@ How it works:
 5- start the second node of the cluster (on port 2552): sbt "run 2552"
 
 6- check that the hash has been copied to the second (actually to all) node(s) of the cluster: 
+
 	curl http://localhost:8552/hello
+
 	curl http://localhost:8552/world
+
 	or simply
+
 	curl http://localhost:8552
 	
 
