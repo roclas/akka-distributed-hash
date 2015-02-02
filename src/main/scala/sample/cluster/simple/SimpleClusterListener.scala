@@ -47,6 +47,7 @@ class SimpleClusterListener extends Actor with ActorLogging {
   }
 
   def receive = {
+    //CLUSTER EVENTS
     case MemberUp(member) =>
       context.actorSelection(member.address+"/user/clusterListener") ! syncronize(hash)
       log.info("Member is Up: {}", member.address)
@@ -57,14 +58,16 @@ class SimpleClusterListener extends Actor with ActorLogging {
       log.info("Member is Removed: {} after {}", member.address, previousStatus)
       log.info("Current members:{}",cluster.state.members.filter(_.status == Up))
     case _: MemberEvent => // ignore
+    //CLUSTER SYNCRONIZATION
     case syncronizeOverriding(map)=>
       log.info("Syncronizing {} and {}",md5(hash),md5(map))
       for((k,v)<-map){ hash.put(k,v) }
       for((k,v)<-hash){ if(map.get(k)==null)hash.remove(k) }
+      sender ! md5digest(md5(hash))
     case syncronize(map)=>
       log.info("Syncronizing {} and {}",md5(hash),md5(map))
       for((k,v)<-map){ hash.put(k,v) }
-      //for((k,v)<-hash){ if(map.get(k)==null)hash.remove(k) }
+      sender ! md5digest(md5(hash))
     case delete(data:String)=>
       hash.remove(data)
       sender ! md5digest(md5(hash))
@@ -76,8 +79,7 @@ class SimpleClusterListener extends Actor with ActorLogging {
         log.info("comparing {} and {}; they are NOT equal",md5(hash),s)
         sender ! syncronizeOverriding(hash)
       }
-
-      
+    //HTTP REQUESTS
     case req@HttpRequest(HttpMethods.PUT, _, _, _, _) =>{
       val data=req.entity.asString(HttpCharsets.`UTF-8`)
       val hashdata=getParamsMap(data)
