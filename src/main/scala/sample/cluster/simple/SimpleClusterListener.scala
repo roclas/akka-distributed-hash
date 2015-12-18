@@ -49,7 +49,7 @@ class SimpleClusterListener extends Actor with ActorLogging {
   def receive = {
     //CLUSTER EVENTS
     case MemberUp(member) =>
-      context.actorSelection(member.address+"/user/clusterListener") ! syncronize(hash)
+      context.actorSelection(member.address+"/user/clusterListener") ! syncronizeInitial(hash)
       log.info("Member is Up: {}", member.address)
       log.info("Current members:{}",cluster.state.members.filter(_.status == Up))
     case UnreachableMember(member) =>
@@ -59,6 +59,9 @@ class SimpleClusterListener extends Actor with ActorLogging {
       log.info("Current members:{}",cluster.state.members.filter(_.status == Up))
     case _: MemberEvent => // ignore
     //CLUSTER SYNCRONIZATION
+    case syncronizeInitial(map)=>
+      log.info("Syncronizing {} and {}",md5(hash),md5(map))
+      for((k,v)<-map){ hash.put(k,v) }
     case syncronizeOverriding(map)=>
       log.info("Syncronizing {} and {}",md5(hash),md5(map))
       for((k,v)<-map){ hash.put(k,v) }
