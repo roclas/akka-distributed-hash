@@ -1,46 +1,65 @@
-<img src="explanation.gif">
-<h1>akka-distributed-hash</h1>
-<h2>a distributed hash in a cluster in akka</h2>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Akka-distributed-hash by roclas</title>
 
-<p>
-How it works:
-</p>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Akka-distributed-hash</h1>
+        <p>a distributed hash in a cluster in akka</p>
 
-<p>
-1- start the first node of the cluster (on port 2551): sbt "run 2551"   
-</p>
-<p>
-2- check the hash on the fist node through an http GET request: curl http://localhost:8551<br/>
-    (you'll see nothing; the hash is empty)
-</p>
+        <p class="view"><a href="https://github.com/roclas/akka-distributed-hash">View the Project on GitHub <small>roclas/akka-distributed-hash</small></a></p>
 
-<p>
-3- put elements into the hash through an http PUT request: curl -X PUT http://localhost:8551 --data "hello=123&world=456"<br/>
-    (this will insert some more data in that node's hash)
-</p>
 
-<p>
-4- check the hash again now: curl http://localhost:8551
-</p>
+        <ul>
+          <li><a href="https://github.com/roclas/akka-distributed-hash/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/roclas/akka-distributed-hash/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/roclas/akka-distributed-hash">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p><img src="https://raw.githubusercontent.com/roclas/akka-distributed-hash/gh-pages/explanation.gif" alt="how it works"></p>
 
-</p>
-5- start the second node of the cluster (on port 2552): sbt "run 2552"
-</p>
+<p>How it works</p>
 
-<p>
-6- check that the hash has been copied to the second (actually to all) node(s) of the cluster: <br/>
-	curl http://localhost:8552/hello<br/>
-	curl http://localhost:8552/world<br/>
-	or simply<br/>
-	curl http://localhost:8552
-</p>
-	
+<p>1- start the first node of the cluster (on port 2551): sbt "run 2551"</p>
 
-<p>
-AND YOU ARE DONE!!
-</p>
+<p>2- check the hash on the fist node through an http GET request: curl http://localhost:8551
+(you'll see nothing; the hash is empty)</p>
 
-<p>
-*** http deletes (Eg: " curl -X DELETE http://localhost:8551 --data 'hello' ") are supported<br/>
-*** try now to delete something from one of the nodes and check that it's been deleted in the other nodes<br/>
-</p>
+<p>3- put elements into the hash through an http PUT request: curl -X PUT http://localhost:8551 --data "hello=123&amp;world=456"
+(this will insert some more data in that node's hash)</p>
+
+<p>4- check the hash again now: curl http://localhost:8551</p>
+
+<p>5- start the second node of the cluster (on port 2552): sbt "run 2552"
+6- check that the hash has been copied to the second (actually to all) node(s) of the cluster: 
+curl http://localhost:8552/hello
+curl http://localhost:8552/world
+or simply
+curl http://localhost:8552</p>
+
+<p>AND YOU ARE DONE!!</p>
+
+<p>*** http deletes (Eg: " curl -X DELETE http://localhost:8551 --data 'hello' ") are supported
+*** try now to delete something from one of the nodes and check that it's been deleted in the other nodes</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/roclas">roclas</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
