@@ -5,6 +5,7 @@ import akka.cluster.Cluster
 import akka.cluster.ClusterEvent._
 import akka.io.IO
 import spray.can.Http
+import collection.JavaConversions._
 
 
 
@@ -15,7 +16,13 @@ object SimpleClusterApp extends App {
   if (args.nonEmpty) System.setProperty("akka.remote.netty.tcp.port", args(0))
 
   // Create an Akka system
-  implicit val system = ActorSystem("ClusterSystem")
+  implicit val system = ActorSystem("ClusterSystem") 
+
+  val selfAddress=Cluster(system).selfAddress 
+  val seeds=system.settings.config.getList("akka.cluster.seed-nodes")
+  System.setProperty("akka.cluster.seed-nodes", 
+	seeds filter(!_.toString.contains(selfAddress.toString)) toString
+  )
 
   val clusterListener = system.actorOf(Props( new SimpleClusterListener()), name = "clusterListener")
 
